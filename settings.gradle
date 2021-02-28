@@ -1,0 +1,3 @@
+include ':KeystrokeAuthentication'
+include ':app'
+rootProject.name = "KeystrokeAuthenticationExample"
