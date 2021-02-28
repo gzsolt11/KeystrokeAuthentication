@@ -2,7 +2,7 @@ package com.example.keystrokeauthentication
 
 import android.util.Log
 
-class KeystrokeAuthentication {
+class KeystrokeAuthenticationProvider {
 
     public fun makeLog(message:String){
         Log.v("KeystrokeAuthentication",message)
