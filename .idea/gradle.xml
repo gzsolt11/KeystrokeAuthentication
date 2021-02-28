@@ -10,7 +10,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/KeystrokeAuthentication" />
+            <option value="$PROJECT_DIR$/KeystrokeAuthenticationModule" />
             <option value="$PROJECT_DIR$/app" />
           </set>
         </option>
