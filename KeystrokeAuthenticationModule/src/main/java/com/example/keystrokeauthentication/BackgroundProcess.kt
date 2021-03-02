@@ -16,22 +16,22 @@ class BackgroundProcess: Service() {
     override fun onBind(p0: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        readFile()
+
+        Thread {
+            while (true) {
+                readFile()
+            }
+        }.start()
+
         // if the server kills the service it will be recreated
         return START_REDELIVER_INTENT
     }
 
     fun readFile(){
-        try{
-            var fileReader = FileReader("keylog.csv")
+        var text:String
+        val fileText = applicationContext.resources.openRawResource(R.raw.keylogs).bufferedReader().use { text = it.readText() }
 
-            do{
-                var c = fileReader.read()
-                Log.v(TAG,c.toString())
-            }while(c != -1)
-        } catch (ex: Exception){
-            print(ex.message)
-        }
+        Log.v("READFILE",text)
 
 
     }
