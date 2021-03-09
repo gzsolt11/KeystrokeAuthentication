@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:background="#5D000000">
+
+    <TextView
+        android:id="@+id/buttonNumber1"
+        style="@style/buttonStyle"
+        android:text="1"
+        android:textColor="@color/white"
+        android:background="@drawable/buttonbackground"
+        app:layout_constraintEnd_toStartOf="@+id/buttonNumber2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/buttonNumber2"
+        style="@style/buttonStyle"
+        android:background="@drawable/buttonbackground"
+        android:text="2"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toStartOf="@+id/buttonNumber3"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/buttonNumber1"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/buttonNumber3"
+        style="@style/buttonStyle"
+        android:background="@drawable/buttonbackground"
+        android:text="3"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/buttonNumber2"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/buttonNumber4"
+        style="@style/buttonStyle"
+        android:background="@drawable/buttonbackground"
+        android:text="4"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toStartOf="@+id/buttonNumber5"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonNumber1" />
+
+    <TextView
+        android:id="@+id/buttonNumber5"
+        style="@style/buttonStyle"
+        android:background="@drawable/buttonbackground"
+        android:text="5"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toStartOf="@+id/buttonNumber6"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/buttonNumber4"
+        app:layout_constraintTop_toBottomOf="@+id/buttonNumber2" />
+
+    <TextView
+        android:id="@+id/buttonNumber6"
+        style="@style/buttonStyle"
+        android:background="@drawable/buttonbackground"
+        android:text="6"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/buttonNumber5"
+        app:layout_constraintTop_toBottomOf="@+id/buttonNumber3" />
+
+    <TextView
+        android:id="@+id/buttonNumber7"
+        style="@style/buttonStyle"
+        android:background="@drawable/buttonbackground"
+        android:text="7"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toStartOf="@+id/buttonNumber8"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonNumber6" />
+
+    <TextView
+        android:id="@+id/buttonNumber8"
+        style="@style/buttonStyle"
+        android:background="@drawable/buttonbackground"
+        android:text="8"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toStartOf="@+id/buttonNumber9"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/buttonNumber7"
+        app:layout_constraintTop_toBottomOf="@+id/buttonNumber5" />
+
+    <TextView
+        android:id="@+id/buttonNumber9"
+        style="@style/buttonStyle"
+        android:background="@drawable/buttonbackground"
+        android:text="9"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/buttonNumber8"
+        app:layout_constraintTop_toBottomOf="@+id/buttonNumber6" />
+
+    <TextView
+        android:id="@+id/buttonNumber0"
+        style="@style/buttonStyle"
+        android:background="@drawable/buttonbackground"
+        android:text="0"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toStartOf="@+id/buttonOK"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/buttonDelete"
+        app:layout_constraintTop_toBottomOf="@+id/buttonNumber8" />
+
+    <TextView
+        android:id="@+id/buttonDelete"
+        style="@style/buttonStyle"
+        android:background="@drawable/buttonbackground"
+        android:text="Del"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toStartOf="@+id/buttonNumber0"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonNumber7" />
+
+    <TextView
+        android:id="@+id/buttonOK"
+        style="@style/buttonStyle"
+        android:background="@drawable/buttonbackground"
+        android:text="Ok"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/buttonNumber0"
+        app:layout_constraintTop_toBottomOf="@+id/buttonNumber9" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
