@@ -1,23 +1,20 @@
 package com.example.keystrokeauthentication
 
-import android.app.Activity
 import android.app.Service
 import android.content.*
 import android.content.res.Resources
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.PopupWindow
 import android.widget.TextView
-import android.widget.Toast
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 
-class KeystrokeAuthenticationProvider(var activity: Activity, var editText: EditText) {
+class KeystrokeAuthenticationProvider( var activityContext:Context,var editText: EditText) {
 
+    private val TRAINCOUNTER = 10
     private var key0: TextView
     private var key1: TextView
     private var key2: TextView
@@ -28,8 +25,8 @@ class KeystrokeAuthenticationProvider(var activity: Activity, var editText: Edit
     private var key7: TextView
     private var key8: TextView
     private var key9: TextView
-    private var keyOk: TextView
-    private var keyDel: TextView
+    private var keyOk: ImageView
+    private var keyDel: ImageView
     private lateinit var trainkey0: TextView
     private lateinit var trainkey1: TextView
     private lateinit var trainkey2: TextView
@@ -40,8 +37,8 @@ class KeystrokeAuthenticationProvider(var activity: Activity, var editText: Edit
     private lateinit var trainkey7: TextView
     private lateinit var trainkey8: TextView
     private lateinit var trainkey9: TextView
-    private lateinit var trainkeyOk: TextView
-    private lateinit var trainkeyDel: TextView
+    private lateinit var trainkeyOk: ImageView
+    private lateinit var trainkeyDel: ImageView
     private lateinit var trainEditText: EditText
     private lateinit var trainPinTitle: TextView
     private lateinit var inputMethodManager:InputMethodManager
@@ -52,16 +49,15 @@ class KeystrokeAuthenticationProvider(var activity: Activity, var editText: Edit
     private var releasedTimeStamps:ArrayList<Long> = ArrayList()
     private  var authenticatePressedTimestamps:ArrayList<Long> = ArrayList()
     private var authenticateReleasedTimestamps:ArrayList<Long> = ArrayList()
-    private var trainCounter = 10
-    private val TRAINCOUNTER = 10
-    //private var trainEditText: EditText
+    private var trainCounterLeft = TRAINCOUNTER
     private var keyArray = ArrayList<TextView>()
     private var trainKeyArray = ArrayList<TextView>()
     private lateinit var keyboardPopUp:PopupWindow
     private lateinit var trainPopUp:PopupWindow
     private var isClicked = false
-    val sharedPreferences: SharedPreferences
-    var authenticationResult: Boolean? = null
+    private val sharedPreferences: SharedPreferences
+    private var authenticationBroadcastReceiver: AuthenticationBroadcastReceiver
+    private var isServiceRunning = false
 
     init{
         ruleEditText(editText)
@@ -89,89 +85,76 @@ class KeystrokeAuthenticationProvider(var activity: Activity, var editText: Edit
         keyOk = keyboardPopUp.contentView.findViewById(R.id.buttonOK)
         keyDel = keyboardPopUp.contentView.findViewById(R.id.buttonDelete)
 
+        authenticationBroadcastReceiver = AuthenticationBroadcastReceiver()
+        val intentFilter = IntentFilter()
+        intentFilter.addAction("StartBackgroundReceiver")
+        LocalBroadcastManager.getInstance(activityContext).registerReceiver(authenticationBroadcastReceiver,intentFilter)
+
+        startBackgroundProcess()
 
         setListenersToKeys()
-        sharedPreferences = activity.getSharedPreferences("sharedPref", Service.MODE_PRIVATE)
-
-        val myReciever:BroadcastReceiver = object : BroadcastReceiver(){
-            override fun onReceive(context: Context?, intent: Intent?) {
-                authenticationResult = intent!!.getBooleanExtra("authenticationResult",false)
-                Log.v("AUTHENTICATIONRESULT",authenticationResult.toString())
-                Toast.makeText(activity.applicationContext, "Authentication result:" + authenticationResult.toString(), Toast.LENGTH_SHORT).show()
-
-            }
-
-        }
-        LocalBroadcastManager.getInstance(activity).registerReceiver(myReciever, IntentFilter("SendResultToAuthenticationProvider"))
+        sharedPreferences = activityContext.getSharedPreferences("sharedPref", Service.MODE_PRIVATE)
     }
 
-    private fun trainApplication(pressedTimestamps:ArrayList<Long>, releasedTimestamps:ArrayList<Long>){
 
-        var intent = Intent(activity.applicationContext, BackgroundProcess::class.java).also {
-            it.putExtra("ID", 2)
-            it.putExtra("pressedTimestamps",pressedTimestamps)
-            it.putExtra("releasedTimestamps",releasedTimestamps)
-            activity.applicationContext.startService(it)
-        }
+    private fun trainApplication(pressedTimestamps:ArrayList<Long>, releasedTimestamps:ArrayList<Long>){
+        val intent = Intent("StartBackgroundReceiver")
+        intent.putExtra("ID",2)
+        intent.putExtra("pressedTimestamps", pressedTimestamps)
+        intent.putExtra("releasedTimestamps", releasedTimestamps)
+        LocalBroadcastManager.getInstance(activityContext).sendBroadcast(intent)
     }
 
     fun startBackgroundProcess(){
-        var intent = Intent(activity.applicationContext, BackgroundProcess::class.java).also {
-            it.putExtra("ID", 0)
-            activity.applicationContext.startService(it)
-        }
+        val intent = Intent("StartBackgroundReceiver")
+        intent.putExtra("ID",0)
+        LocalBroadcastManager.getInstance(activityContext).sendBroadcast(intent)
+        isServiceRunning = true
     }
 
-    fun authenticate(){
-        Log.v("BEIRT ADAT",authenticatePressedTimestamps.toString())
-        if(authenticatePressedTimestamps.size == 6) {
-            var intent = Intent(activity.applicationContext, BackgroundProcess::class.java).also {
-                it.putExtra("ID", 1)
-                it.putExtra("pressedTimestamps", authenticatePressedTimestamps)
-                it.putExtra("releasedTimestamps", authenticateReleasedTimestamps)
-                activity.applicationContext.startService(it)
-            }
+    fun authenticate(): Boolean{
+        if(isServiceRunning) {
+            val authenticationResult = authenticationBroadcastReceiver.authenticate(authenticatePressedTimestamps, authenticateReleasedTimestamps)
+            editText.setText("")
             authenticatePressedTimestamps = ArrayList()
             authenticateReleasedTimestamps = ArrayList()
-            editText.setText("")
-
-        }else{
-            Toast.makeText(activity.applicationContext, "PIN is wrong!", Toast.LENGTH_SHORT).show()
+            return authenticationResult
         }
+        editText.setText("")
+        return false
     }
 
 
     fun stopBackgroundProcess(){
-        var intent = Intent(activity.applicationContext, BackgroundProcess::class.java).also {
-            activity.applicationContext.stopService(it)
-        }
+        LocalBroadcastManager.getInstance(activityContext).unregisterReceiver(authenticationBroadcastReceiver)
+        isServiceRunning = false
     }
 
     private fun ruleEditText(editText:EditText){
-        layoutInflater = activity.applicationContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        layoutInflater = activityContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         keyboardPopUp = PopupWindow(layoutInflater.inflate(R.layout.keyboard, null,false), Resources.getSystem().displayMetrics.widthPixels,ViewGroup.LayoutParams.WRAP_CONTENT,true)
 
-        inputMethodManager = activity.applicationContext.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        inputMethodManager = activityContext.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.hideSoftInputFromWindow(editText.rootView.findViewById(R.id.content), 0)
         editText.isFocusable = false
         editText.setOnClickListener{ view ->
-            keyboardPopUp.showAtLocation(activity.window.decorView.rootView,Gravity.BOTTOM,0,0)
+            keyboardPopUp.showAtLocation(view.rootView,Gravity.BOTTOM,0,0)
         }
     }
 
     fun train(){
         pressedTimestamps = ArrayList()
         releasedTimeStamps = ArrayList()
-        trainCounter = TRAINCOUNTER
+        trainCounterLeft = TRAINCOUNTER
 
-        trainPopUp = PopupWindow(layoutInflater.inflate(R.layout.trainingpincode, null,false), Resources.getSystem().displayMetrics.widthPixels,activity.window.decorView.height,true)
-        trainPopUp.showAtLocation(activity.window.decorView.rootView,Gravity.TOP,0,0)
+        trainPopUp = PopupWindow(layoutInflater.inflate(R.layout.trainingpincode, null,false), Resources.getSystem().displayMetrics.widthPixels,editText.rootView.height,true)
+        trainPopUp.showAtLocation(editText.rootView,Gravity.TOP,0,0)
 
         trainPinTitle = trainPopUp.contentView.findViewById(R.id.trainPinCodeTitle)
-        trainPinTitle.text = "Write your pincode " + trainCounter + " times"
+        trainPinTitle.text = "Write your pincode " + trainCounterLeft + " times"
 
         trainEditText = trainPopUp.contentView.findViewById<EditText>(R.id.trainPinCodeEditText)
-        inputMethodManager.hideSoftInputFromWindow(editText.rootView.findViewById(R.id.content), 0)
+        inputMethodManager.hideSoftInputFromWindow(trainEditText.rootView.findViewById(R.id.content), 0)
         trainEditText.isFocusable = false
 
         trainkey0 = trainPopUp.contentView.findViewById(R.id.buttonNumber0)
@@ -198,16 +181,14 @@ class KeystrokeAuthenticationProvider(var activity: Activity, var editText: Edit
         trainkeyDel = trainPopUp.contentView.findViewById(R.id.buttonDelete)
 
         setListenersToTrainKeys()
-
     }
-
 
 
     private fun setListenersToKeys(){
         for(key in keyArray){
-            key.setOnClickListener{ view ->
+            key.setOnClickListener{ _ ->
                 if(editText.text.length < 6) {
-                    editText.setText(editText.text.toString() + key.text)
+                    editText.setText(editText.text.toString() + "*")
                 }
             }
             key.setOnTouchListener(object: View.OnTouchListener{
@@ -226,13 +207,13 @@ class KeystrokeAuthenticationProvider(var activity: Activity, var editText: Edit
                 }
             })
         }
-        keyOk.setOnClickListener{ view ->
-            if(editText.text.length == 6) {
-                keyboardPopUp.dismiss()
-            }
 
+        keyOk.setOnClickListener{ _ ->
+            keyboardPopUp.dismiss()
         }
-        keyDel.setOnClickListener{ view ->
+
+
+        keyDel.setOnClickListener{ _ ->
             editText.setText("")
             authenticatePressedTimestamps = ArrayList()
             authenticateReleasedTimestamps = ArrayList()
@@ -241,9 +222,9 @@ class KeystrokeAuthenticationProvider(var activity: Activity, var editText: Edit
 
     private fun setListenersToTrainKeys(){
         for(key in trainKeyArray){
-            key.setOnClickListener{ view ->
+            key.setOnClickListener{ _ ->
                 if(trainEditText.text.length < 6) {
-                    trainEditText.setText(trainEditText.text.toString() + key.text)
+                    trainEditText.setText(trainEditText.text.toString() + "*")
                 }
             }
             key.setOnTouchListener(object: View.OnTouchListener{
@@ -262,26 +243,27 @@ class KeystrokeAuthenticationProvider(var activity: Activity, var editText: Edit
                 }
             })
         }
-        trainkeyOk.setOnClickListener{ view ->
+
+        trainkeyOk.setOnClickListener{ _ ->
             if(trainEditText.text.length == 6) {
                 pressedTimestamps.addAll(temporarPressedTimestamps)
                 releasedTimeStamps.addAll(temporarReleasedTimeStamps)
                 temporarPressedTimestamps = ArrayList()
                 temporarReleasedTimeStamps = ArrayList()
                 trainEditText.setText("")
-                trainCounter -= 1
-                trainPinTitle.text = "Write your pincode " + trainCounter + " times"
-                if (trainCounter == 0) {
+                trainCounterLeft -= 1
+                trainPinTitle.text = "Write your pincode " + trainCounterLeft + " times"
+                if (trainCounterLeft == 0) {
                     trainPopUp.dismiss()
                     trainApplication(pressedTimestamps, releasedTimeStamps)
                 }
             }
         }
-        trainkeyDel.setOnClickListener{ view ->
+
+        trainkeyDel.setOnClickListener{ _ ->
             trainEditText.setText("")
             temporarPressedTimestamps = ArrayList()
             temporarReleasedTimeStamps = ArrayList()
         }
     }
-
 }

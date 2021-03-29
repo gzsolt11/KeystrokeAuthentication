@@ -120,23 +120,25 @@
         app:layout_constraintStart_toEndOf="@+id/buttonDelete"
         app:layout_constraintTop_toBottomOf="@+id/buttonNumber8" />
 
-    <TextView
+    <ImageView
         android:id="@+id/buttonDelete"
         style="@style/buttonStyle"
         android:background="@drawable/buttonbackground"
-        android:text="Del"
         android:textColor="@color/white"
+        android:src="@drawable/ic_backspace"
+        android:scaleType="center"
         app:layout_constraintEnd_toStartOf="@+id/buttonNumber0"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonNumber7" />
 
-    <TextView
+    <ImageView
         android:id="@+id/buttonOK"
         style="@style/buttonStyle"
         android:background="@drawable/buttonbackground"
-        android:text="Ok"
+        android:src="@drawable/ic_done"
+        android:scaleType="center"
         android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"

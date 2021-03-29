@@ -35,7 +35,7 @@
                 android:layout_height="150dp"
                 android:layout_marginTop="20dp"
                 android:gravity="center"
-                android:text="Write your pincode 10 times"
+                android:text="Write your PIN code 10 times"
                 android:textSize="35sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
