@@ -648,9 +648,9 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             deviationPopUp.contentView.findViewById<TextView>(R.id.actualValue).text =
                     String.format("%.5f", threshold)
             deviationPopUp.contentView.findViewById<TextView>(R.id.lowerBoundary).text =
-                    String.format("%.5f", hardThreshold)
+                    String.format("%.5f", easyThreshold)
             deviationPopUp.contentView.findViewById<TextView>(R.id.upperBoundary).text =
-                    String.format("%.5f", easyThreshold.toFloat())
+                    String.format("%.5f", hardThreshold.toFloat())
 
             val graph2 = deviationPopUp.contentView.findViewById<GraphView>(R.id.graphView)
 
@@ -673,8 +673,6 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
 
             series3 = LineGraphSeries()
             series5 = LineGraphSeries()
-            //series3.appendData(DataPoint(0.0, threshold), false, 100)
-            //series3.appendData(DataPoint(1.0, threshold), false, 100)
             for(i in 0 until thresholdsAndRates[0].size){
                 series3.appendData(DataPoint(thresholdsAndRates[0][i], thresholdsAndRates[1][i]), false, 100)
                 series5.appendData(DataPoint(thresholdsAndRates[0][i], thresholdsAndRates[2][i]), false, 100)
@@ -692,7 +690,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
 
 
             slider.valueFrom =  easyThreshold.toFloat()
-            slider.valueTo = hardThreshold.toFloat()
+            slider.valueTo = hardThreshold.toFloat()+0.00001.toFloat()
             slider.value = threshold.toFloat()
             slider.addOnChangeListener(Slider.OnChangeListener { slider, value, fromUser ->
                 deviationPopUp.contentView.findViewById<TextView>(R.id.actualValue).text =
