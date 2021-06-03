@@ -148,12 +148,8 @@ class AuthenticationBroadcastReceiver : BroadcastReceiver() {
     }
 
     private fun manhattanScaledDistances(positiveTrainData: MutableList<List<Int>>, testData: MutableList<List<Int>>): MutableList<Double> {
-        Log.v("MANHATTANTrain",positiveTrainData.toString())
-        Log.v("MANHATTANTest",testData.toString())
         val meanVector = calculateMeanVector(positiveTrainData)
         val madVector = calculateMadVector(positiveTrainData, meanVector)
-        Log.v("MANHATTANMEAN",meanVector.toString())
-        Log.v("MANHATTANMAD",madVector.toString())
         var testScores: MutableList<Double> = ArrayList()
 
         for (i in 0 until testData.size) {
@@ -293,8 +289,6 @@ class AuthenticationBroadcastReceiver : BroadcastReceiver() {
         if(json == null){
             Toast.makeText(broadcastContext, "Application is not trained yet!", Toast.LENGTH_SHORT).show()
             return false
-        }else{
-            Toast.makeText(broadcastContext, "The application is trained!", Toast.LENGTH_SHORT).show()
         }
         return true
     }
