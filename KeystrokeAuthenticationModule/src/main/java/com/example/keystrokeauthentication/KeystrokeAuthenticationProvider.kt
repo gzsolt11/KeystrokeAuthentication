@@ -629,7 +629,11 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             deviationPopUp.showAtLocation(editText.rootView, Gravity.TOP, 0, 0)
             val slider = deviationPopUp.contentView.findViewById<Slider>(R.id.slider)
 
-
+            if(easyThreshold > hardThreshold){
+                val temp = easyThreshold
+                easyThreshold = hardThreshold
+                hardThreshold = temp
+            }
             deviationPopUp.contentView.findViewById<Button>(R.id.deviationOkButton)
                     .setOnClickListener {
                         val sharedPreference =
