@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/nav_train"
+            android:title="Training"
+            android:icon="@drawable/ic_weight"
+            />
+
+    </group>
+
+
+        <item android:title="Settings">
+            <menu>
+                <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_deviation"
+                    android:title="Security level"
+                    android:icon="@drawable/ic_level"
+                    />
+
+                <item
+                    android:id="@+id/nav_color"
+                    android:title="Keyboard color"
+                    android:icon="@drawable/ic_keyboard"
+                    />
+                </group>
+            </menu>
+        </item>
+
+
+
+
+        <item android:title="Other">
+            <menu>
+                <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_help"
+                    android:title="Help"
+                    android:icon="@drawable/ic_help"
+                    />
+                </group>
+            </menu>
+        </item>
+
+
+
+</menu>

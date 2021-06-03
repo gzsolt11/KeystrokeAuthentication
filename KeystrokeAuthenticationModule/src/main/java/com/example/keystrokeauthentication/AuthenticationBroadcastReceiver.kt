@@ -1,11 +1,7 @@
 package com.example.keystrokeauthentication
 
-
 import android.app.Service
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
+import android.content.*
 import android.util.Log
 import android.widget.Toast
 import com.google.gson.Gson
@@ -17,7 +13,7 @@ import kotlin.math.min
 class AuthenticationBroadcastReceiver : BroadcastReceiver() {
 
     private val TAG = "AuthenticationBroadcastReceiver"
-    private val TESTDATASIZE = 5
+    private val TESTDATASIZE = 15
     private val TRAINDATASIZE = 5
     private var dataFrame = HashMap<Int, ArrayList<List<Int>>>()
     private var positiveTrainData: MutableList<List<Int>> = ArrayList()
@@ -26,9 +22,15 @@ class AuthenticationBroadcastReceiver : BroadcastReceiver() {
     private var positiveTestScores: MutableList<Double> = ArrayList()
     private var negativeTestScores: MutableList<Double> = ArrayList()
     private var threshold: Double = 0.0
+    private var easyThreshold: Double = 0.0
+    private var hardThreshold: Double = 0.0
     private lateinit var pressedTimestamps: ArrayList<Long>
     private lateinit var releasedTimestamps: ArrayList<Long>
     private var broadcastContext: Context? = null
+    private var eer = -0.1
+    private lateinit var falseNegativeRate: MutableList<Double>
+    private lateinit var falsePositiveRate: MutableList<Double>
+    private lateinit var thresholds: MutableList<Double>
 
     override fun onReceive(context: Context?, intent: Intent?) {
         val extra = intent?.extras?.get("ID")
@@ -64,14 +66,11 @@ class AuthenticationBroadcastReceiver : BroadcastReceiver() {
         positiveTestScores = manhattanScaledDistances(positiveTrainData, positiveTestData)
         negativeTestScores = manhattanScaledDistances(positiveTrainData, negativeTestData)
 
-        val scores: ArrayList<MutableList<Double>> = ArrayList()
-        scores.add(positiveTestScores)
-        scores.add(negativeTestScores)
+        var thresholdList = getThreshold(positiveTestScores, negativeTestScores)
+        threshold = thresholdList[0]
+        easyThreshold = thresholdList[1]
+        hardThreshold = thresholdList[2]
 
-        positiveTestScores = scores[0]
-        negativeTestScores = scores[1]
-
-        threshold = getThreshold(positiveTestScores, negativeTestScores)
         Log.v(TAG, "Threshold: $threshold")
     }
 
@@ -101,8 +100,7 @@ class AuthenticationBroadcastReceiver : BroadcastReceiver() {
                 if (elements[0].toIntOrNull() != null) {
                     val userId = elements[elements.size - 1].toInt()
                     elements.removeLast()
-                    //Log.v("READIN",elements.toString())
-                    var arrayList = dataFrame.get(userId)
+                    var arrayList = dataFrame[userId]
                     if (arrayList == null) {
                         arrayList = ArrayList()
                     }
@@ -139,9 +137,6 @@ class AuthenticationBroadcastReceiver : BroadcastReceiver() {
                         negativeTestData.add(dataFrame[key]!![0])
                     }
                 }
-                if (negativeTestData.size == TESTDATASIZE) {
-                    break
-                }
             }
 
             datas.add(positiveTrainData)
@@ -153,8 +148,12 @@ class AuthenticationBroadcastReceiver : BroadcastReceiver() {
     }
 
     private fun manhattanScaledDistances(positiveTrainData: MutableList<List<Int>>, testData: MutableList<List<Int>>): MutableList<Double> {
+        Log.v("MANHATTANTrain",positiveTrainData.toString())
+        Log.v("MANHATTANTest",testData.toString())
         val meanVector = calculateMeanVector(positiveTrainData)
         val madVector = calculateMadVector(positiveTrainData, meanVector)
+        Log.v("MANHATTANMEAN",meanVector.toString())
+        Log.v("MANHATTANMAD",madVector.toString())
         var testScores: MutableList<Double> = ArrayList()
 
         for (i in 0 until testData.size) {
@@ -197,14 +196,14 @@ class AuthenticationBroadcastReceiver : BroadcastReceiver() {
         return madVector
     }
 
-    private fun getThreshold(positiveTestScores: MutableList<Double>, negativeTestScores: MutableList<Double>): Double {
+    private fun getThreshold(positiveTestScores: MutableList<Double>, negativeTestScores: MutableList<Double>): ArrayList<Double> {
         val allScores = ArrayList(positiveTestScores)
         allScores.addAll(negativeTestScores)
         val minScore = allScores.reduce { acc, next -> min(acc, next) }
         val maxScore = allScores.reduce { acc, next -> max(acc, next) }
         val unit: Double = (maxScore - minScore) / (TESTDATASIZE + TRAINDATASIZE)
 
-        val thresholds: MutableList<Double> = ArrayList()
+        thresholds = ArrayList()
         var threshold = minScore
 
         for (i in 0 until (TESTDATASIZE + TRAINDATASIZE)) {
@@ -214,16 +213,77 @@ class AuthenticationBroadcastReceiver : BroadcastReceiver() {
 
         var savedThreshold = 0.0
         var savedfn = positiveTestScores.size
+        falseNegativeRate = ArrayList()
+        falsePositiveRate = ArrayList()
         for (thresholdElement in thresholds) {
             val fp = negativeTestScores.filter { it -> it >= thresholdElement }.size
             val fn = positiveTestScores.filter { it -> it < thresholdElement }.size
+            falseNegativeRate.add(fn.toDouble()/positiveTestScores.size)
+            falsePositiveRate.add(fp.toDouble()/positiveTestScores.size)
 
-            if ((fp == 0) and (fn < savedfn)) {
+            if ((fp == fn) and (fn <= savedfn)) {
                 savedThreshold = thresholdElement
                 savedfn = fn
             }
         }
-        return savedThreshold
+
+        var min = falseNegativeRate.size
+        var max = 0
+        for(i in 0 until falseNegativeRate.size){
+            if(falseNegativeRate[i] == falsePositiveRate[i]){
+                if(i < min){
+                    min = i
+                }
+                if(i > max){
+                    max = i
+                }
+            }
+        }
+
+        var nehezhatar = falseNegativeRate.size
+        for(i in 0 until falseNegativeRate.size){
+            if(falseNegativeRate[i] == 0.0){
+                nehezhatar = i
+            }
+        }
+
+        var konnyuhatar = falsePositiveRate.size
+        for(i in 0 until falsePositiveRate.size){
+            if(falsePositiveRate[i] == 0.0){
+                konnyuhatar = i
+                break
+            }
+        }
+
+        val index = equalErrorRate(falseNegativeRate,falsePositiveRate)
+        savedThreshold = thresholds[index]
+
+        return arrayListOf<Double>(savedThreshold, thresholds[konnyuhatar], thresholds[nehezhatar])
+    }
+
+    private fun equalErrorRate(falseNegativeRate: MutableList<Double>, falsePositiveRate: MutableList<Double>):Int{
+
+        val distances: MutableList<Double> = ArrayList()
+
+        for(i in 0 until falseNegativeRate.size){
+            distances.add(falseNegativeRate[i]-falsePositiveRate[i])
+        }
+        Log.v("rate",distances.toString())
+        var minimum = 1.5
+
+        var index1 = 0
+        for(i in 0 until distances.size){
+            if(distances[i] >= 0 && distances[i] < minimum){
+                minimum = distances[i]
+                index1 = i
+            }
+        }
+
+        val eerfpr = falsePositiveRate[index1]
+        val eerfnr = falseNegativeRate[index1]
+
+        eer = 0.5 * (eerfpr+eerfnr)
+        return index1
     }
 
 
@@ -233,14 +293,14 @@ class AuthenticationBroadcastReceiver : BroadcastReceiver() {
         if(json == null){
             Toast.makeText(broadcastContext, "Application is not trained yet!", Toast.LENGTH_SHORT).show()
             return false
+        }else{
+            Toast.makeText(broadcastContext, "The application is trained!", Toast.LENGTH_SHORT).show()
         }
         return true
     }
 
     private fun convertTimestampsToKeystrokes(pressedTimestamps: ArrayList<Long>, releasedTimestamps: ArrayList<Long>):ArrayList<List<Int>> {
 
-        Log.v(TAG, "TANUL $pressedTimestamps.toString()")
-        Log.v(TAG, "TANUL $releasedTimestamps.toString()")
         val inputtedTrainData: ArrayList<List<Int>> = ArrayList()
         var i = 0
         while (i < pressedTimestamps.size) {
@@ -267,7 +327,6 @@ class AuthenticationBroadcastReceiver : BroadcastReceiver() {
 
             i += 6
         }
-
         return inputtedTrainData
     }
 
@@ -284,12 +343,18 @@ class AuthenticationBroadcastReceiver : BroadcastReceiver() {
 
     private fun authenticateStrokes(keylog: MutableList<List<Int>>): Boolean {
         val userScore = manhattanScaledDistances(positiveTrainData, keylog)
-        Log.v(TAG,"TRAINEDTRESHOLD: $threshold.toString()")
-        Log.v(TAG, "USERSCORE: $userScore.toString()")
         val count = userScore.filter { element -> element >= threshold }.size
         if (count == keylog.size && keylog.size != 0) {
             return true
         }
         return false
+    }
+
+    fun getThresholds(): ArrayList<Double>{
+        return arrayListOf(threshold,easyThreshold,hardThreshold)
+    }
+
+    fun getRates():ArrayList<MutableList<Double>>{
+        return arrayListOf(thresholds,falsePositiveRate,falseNegativeRate)
     }
 }

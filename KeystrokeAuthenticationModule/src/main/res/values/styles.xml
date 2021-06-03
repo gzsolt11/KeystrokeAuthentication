@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="buttonStyle">
+    <style name="buttonSize" parent="Theme.MaterialComponents.Light.DarkActionBar">
         <item name="android:layout_height">60dp</item>
         <item name="android:layout_width">70dp</item>
         <item name="android:padding">0dp</item>
