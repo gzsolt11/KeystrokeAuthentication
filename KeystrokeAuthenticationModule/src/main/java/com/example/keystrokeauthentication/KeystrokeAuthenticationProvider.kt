@@ -691,8 +691,8 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             graph2.addSeries(series4)
 
 
-            slider.valueFrom = hardThreshold.toFloat()
-            slider.valueTo = easyThreshold.toFloat()+ 0.00001.toFloat()
+            slider.valueFrom =  easyThreshold.toFloat()
+            slider.valueTo = hardThreshold.toFloat()
             slider.value = threshold.toFloat()
             slider.addOnChangeListener(Slider.OnChangeListener { slider, value, fromUser ->
                 deviationPopUp.contentView.findViewById<TextView>(R.id.actualValue).text =
