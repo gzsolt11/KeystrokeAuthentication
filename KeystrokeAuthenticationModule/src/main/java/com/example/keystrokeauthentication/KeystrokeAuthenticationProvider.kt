@@ -567,6 +567,8 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             if(motionEvent.action == MotionEvent.ACTION_DOWN || motionEvent.action == MotionEvent.ACTION_MOVE){
                 //bitmap = Bitmap.createBitmap(colorPickerImage.width,colorPickerImage.height,Bitmap.Config.ARGB_8888)
                 bitmap = (colorPickerImage.drawable as BitmapDrawable).bitmap
+                var scaled: Bitmap = Bitmap.createScaledBitmap(bitmap,675,675,true)
+                bitmap = scaled
                 Log.v("Meret",colorPickerImage.width.toString()+ " " + colorPickerImage.height)
                 Log.v("MOZGAS", bitmap.width.toString() + " " +bitmap.height)
                 Log.v("MOZGAS", motionEvent.x.toString() + " " +motionEvent.y)
