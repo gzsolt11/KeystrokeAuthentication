@@ -464,15 +464,15 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
                     Log.v("MERET", incorrectReleasedTimestamps.size.toString())
                     if(incorrectReleasedTimestamps.size > 0){
                         val alertDialog = AlertDialog.Builder(activityContext)
-                                .setTitle("Néhány minta eltér a többitől!")
-                                .setMessage("Szeretnéd újraírni a hibás mintákat a biztonság növelése érdekében vagy nem?")
+                                .setTitle("Some pattern differ from the others!")
+                                .setMessage("Would you like to rewrite those patterns to increase security?")
                                 .setCancelable(false)
-                                .setPositiveButton("Igen") { dialog, which ->
+                                .setPositiveButton("Yes") { dialog, which ->
                                     retry = true
                                     trainCounterLeft = incorrectReleasedTimestamps.size/6
                                     trainPinTitle.text = "Write your pincode " + trainCounterLeft + " times"
                                 }
-                                .setNegativeButton("Nem") { dialog, which ->
+                                .setNegativeButton("No") { dialog, which ->
                                     pressedTimestamps.addAll(incorrectPressedTimestamps)
                                     releasedTimeStamps.addAll(incorrectReleasedTimestamps)
                                     trainPopUp.dismiss()
