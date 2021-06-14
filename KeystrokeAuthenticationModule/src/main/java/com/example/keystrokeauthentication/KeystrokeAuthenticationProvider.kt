@@ -23,6 +23,7 @@ import com.google.android.material.slider.Slider
 import com.jjoe64.graphview.GraphView
 import com.jjoe64.graphview.series.DataPoint
 import com.jjoe64.graphview.series.LineGraphSeries
+import java.security.MessageDigest
 
 
 class KeystrokeAuthenticationProvider(var activityContext: Context, var editText: EditText) {
@@ -83,6 +84,9 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
     private var easyThreshold:Double = 0.0
     private var hardThreshold:Double = 0.0
     private var color = ""
+    private var password:String = ""
+    private var passHashed:String = ""
+    private var logInPassword:String = ""
 
 
     init{
@@ -163,6 +167,12 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
 
     fun authenticate(): Boolean{
         if(isServiceRunning) {
+            val logHash = hashString("SHA-256",logInPassword)
+            passHashed = sharedPreferences.getString("passHashed",null)!!
+            if(logHash != passHashed){
+                editText.setText("")
+                return false
+            }
             val authenticationResult = authenticationBroadcastReceiver.authenticate(
                     authenticatePressedTimestamps,
                     authenticateReleasedTimestamps
@@ -273,6 +283,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             key.setOnClickListener{ _ ->
                 if(editText.text.length < 6) {
                     editText.setText(editText.text.toString() + "*")
+                    logInPassword += key.text
                 }
             }
             key.setOnTouchListener(object : View.OnTouchListener {
@@ -300,6 +311,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
 
         keyDel.setOnClickListener{ _ ->
             editText.setText("")
+            logInPassword = ""
             authenticatePressedTimestamps = ArrayList()
             authenticateReleasedTimestamps = ArrayList()
         }
@@ -310,6 +322,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             key.setOnClickListener{ _ ->
                 if(trainEditText.text.length < 6) {
                     trainEditText.setText(trainEditText.text.toString() + "*")
+                    password += key.text
                 }
             }
             key.setOnTouchListener(object : View.OnTouchListener {
@@ -331,6 +344,25 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
 
         trainkeyOk.setOnClickListener{ _ ->
             if(trainEditText.text.length == 6) {
+
+                if(passHashed != ""){
+                    val hash = hashString("SHA-256",password)
+                    if(passHashed != hash) {
+                        Log.v("HASH","NEM EGYEZIK")
+                        Log.v("HASH",password)
+                        trainEditText.setText("")
+                        password = ""
+                        temporarPressedTimestamps = ArrayList()
+                        temporarReleasedTimeStamps = ArrayList()
+                        return@setOnClickListener
+                    }
+                    password = ""
+                }else{
+                    Log.v("HASH",password)
+                    Log.v("HASH","Hash meghatarozasa")
+                    passHashed = hashString("SHA-256",password)
+                    password = ""
+                }
 
                 var meanFeatures:MutableList<Double> = arrayListOf()
                 var testFeatures:List<Int> = arrayListOf()
@@ -483,6 +515,9 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
                         alertDialog.window!!.setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
                         alertDialog.show()
                     }else {
+                        var editor = sharedPreferences.edit()
+                        editor.putString("passHashed",passHashed)
+                        editor.apply()
                         trainPopUp.dismiss()
                         trainApplication(pressedTimestamps, releasedTimeStamps)
                     }
@@ -631,7 +666,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             deviationPopUp.showAtLocation(editText.rootView, Gravity.TOP, 0, 0)
             val slider = deviationPopUp.contentView.findViewById<Slider>(R.id.slider)
 
-            if(easyThreshold > hardThreshold){
+            if(easyThreshold < hardThreshold){
                 val temp = easyThreshold
                 easyThreshold = hardThreshold
                 hardThreshold = temp
@@ -741,6 +776,22 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
         closeButton.setOnClickListener{
             helpPopUp.dismiss()
         }
+    }
+
+    private fun hashString(type: String, input: String): String {
+        val HEX_CHARS = "0123456789ABCDEF"
+        val bytes = MessageDigest
+                .getInstance(type)
+                .digest(input.toByteArray())
+        val result = StringBuilder(bytes.size * 2)
+
+        bytes.forEach {
+            val i = it.toInt()
+            result.append(HEX_CHARS[i shr 4 and 0x0f])
+            result.append(HEX_CHARS[i and 0x0f])
+        }
+
+        return result.toString()
     }
 
 
