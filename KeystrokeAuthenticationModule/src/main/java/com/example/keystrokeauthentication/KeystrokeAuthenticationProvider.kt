@@ -65,6 +65,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
     private var authenticateReleasedTimestamps:ArrayList<Long> = ArrayList()
     private  var incorrectPressedTimestamps:ArrayList<Long> = ArrayList()
     private var incorrectReleasedTimestamps:ArrayList<Long> = ArrayList()
+    private var featureModell:MutableList<Double> = ArrayList()
     private var trainCounterLeft = TRAINCOUNTER
     private var keyArray = ArrayList<TextView>()
     private var trainKeyArray = ArrayList<TextView>()
@@ -78,10 +79,11 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
     private lateinit var graph:GraphView
     private var retry = false
     private var series: LineGraphSeries<DataPoint> = LineGraphSeries()
-    private var keyboardLayout: ConstraintLayout
+    private lateinit var keyboardLayout: ConstraintLayout
     private var threshold:Double = 0.0
     private var easyThreshold:Double = 0.0
     private var hardThreshold:Double = 0.0
+    private var color = ""
     private var password:String = ""
     private var passHashed:String = ""
     private var logInPassword:String = ""
@@ -169,8 +171,10 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             passHashed = sharedPreferences.getString("passHashed",null)!!
             if(logHash != passHashed){
                 editText.setText("")
+                logInPassword = ""
                 return false
             }
+            logInPassword = ""
             val authenticationResult = authenticationBroadcastReceiver.authenticate(
                     authenticatePressedTimestamps,
                     authenticateReleasedTimestamps
@@ -181,6 +185,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             return authenticationResult
         }
         editText.setText("")
+        logInPassword = ""
         return false
     }
 
@@ -214,6 +219,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
         releasedTimeStamps = ArrayList()
         incorrectPressedTimestamps = ArrayList()
         incorrectReleasedTimestamps = ArrayList()
+        featureModell = ArrayList()
         retry = false
 
         series = LineGraphSeries()
@@ -490,17 +496,18 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
 
 
                 if (trainCounterLeft == 0) {
+                    Log.v("MERET", incorrectReleasedTimestamps.size.toString())
                     if(incorrectReleasedTimestamps.size > 0){
                         val alertDialog = AlertDialog.Builder(activityContext)
-                                .setTitle("Néhány minta eltér a többitől!")
-                                .setMessage("Szeretnéd újraírni a hibás mintákat a biztonság növelése érdekében vagy nem?")
+                                .setTitle("Some pattern differ from the others!")
+                                .setMessage("Would you like to rewrite those patterns to increase security?")
                                 .setCancelable(false)
-                                .setPositiveButton("Igen") { dialog, which ->
+                                .setPositiveButton("Yes") { dialog, which ->
                                     retry = true
                                     trainCounterLeft = incorrectReleasedTimestamps.size/6
                                     trainPinTitle.text = "Write your pincode " + trainCounterLeft + " times"
                                 }
-                                .setNegativeButton("Nem") { dialog, which ->
+                                .setNegativeButton("No") { dialog, which ->
                                     pressedTimestamps.addAll(incorrectPressedTimestamps)
                                     releasedTimeStamps.addAll(incorrectReleasedTimestamps)
                                     trainPopUp.dismiss()
@@ -527,7 +534,6 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             temporarReleasedTimeStamps = ArrayList()
         }
     }
-
 
     private fun convertTimestampsToKeystrokes(
             pressedTimestamps: ArrayList<Long>,
@@ -556,26 +562,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             val RP4 = (pressedTimestamps[i + 4] - releasedTimestamps[i + 3]).toInt()
             val RP5 = (pressedTimestamps[i + 5] - releasedTimestamps[i + 4]).toInt()
 
-            inputtedTrainData.add(
-                    listOf(
-                            H1,
-                            H2,
-                            H3,
-                            H4,
-                            H5,
-                            H6,
-                            PP1,
-                            PP2,
-                            PP3,
-                            PP4,
-                            PP5,
-                            RP1,
-                            RP2,
-                            RP3,
-                            RP4,
-                            RP5
-                    )
-            )
+            inputtedTrainData.add(listOf(H1, H2, H3, H4, H5, H6, PP1, PP2, PP3, PP4, PP5, RP1, RP2, RP3, RP4, RP5))
 
             i += 6
         }
@@ -598,7 +585,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
 
     @SuppressLint("ClickableViewAccessibility")
     fun setKeyboardColor(){
-        var colorPopUp = PopupWindow(
+        val colorPopUp = PopupWindow(
                 layoutInflater.inflate(R.layout.colorpicker, null, false),
                 Resources.getSystem().displayMetrics.widthPixels,
                 editText.rootView.height,
@@ -606,8 +593,8 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
         )
         colorPopUp.showAtLocation(editText.rootView, Gravity.TOP, 0, 0)
 
-        var colorPickerImage:ImageView = colorPopUp.contentView.findViewById(R.id.colorPicker)
-        var colorPickerButton:Button = colorPopUp.contentView.findViewById(R.id.pickerButton)
+        val colorPickerImage:ImageView = colorPopUp.contentView.findViewById(R.id.colorPicker)
+        val colorPickerButton:Button = colorPopUp.contentView.findViewById(R.id.pickerButton)
         var bitmap: Bitmap
         var r:Int = 1
         var g:Int = 1
@@ -620,7 +607,10 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
                 bitmap = (colorPickerImage.drawable as BitmapDrawable).bitmap
                 var scaled: Bitmap = Bitmap.createScaledBitmap(bitmap,675,675,true)
                 bitmap = scaled
-                var pixel: Int = bitmap.getPixel(motionEvent.x.toInt(), motionEvent.y.toInt())
+                Log.v("Meret",colorPickerImage.width.toString()+ " " + colorPickerImage.height)
+                Log.v("MOZGAS", bitmap.width.toString() + " " +bitmap.height)
+                Log.v("MOZGAS", motionEvent.x.toString() + " " +motionEvent.y)
+                val pixel: Int = bitmap.getPixel(motionEvent.x.toInt(), motionEvent.y.toInt())
 
                 r = Color.red(pixel)
                 g = Color.green(pixel)
@@ -636,12 +626,13 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
 
             setKeyboardColor(r,g,b)
 
-            var editor = sharedPreferences.edit()
+            val editor = sharedPreferences.edit()
             editor.putInt("R",r)
             editor.putInt("G",g)
             editor.putInt("B",b)
 
             editor.apply()
+            Log.v("VANEBENNE",sharedPreferences.contains("R").toString())
             colorPopUp.dismiss()
 
         }
@@ -667,7 +658,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
     fun setDeviationForThreshold(){
         getThresholds()
         if(threshold > 0.0) {
-            var thresholdsAndRates: ArrayList<MutableList<Double>> = authenticationBroadcastReceiver.getRates()
+            val thresholdsAndRates: ArrayList<MutableList<Double>> = authenticationBroadcastReceiver.getRates()
             activityContext.setTheme(R.style.Theme_MaterialComponents)
             deviationPopUp = PopupWindow(
                     layoutInflater.inflate(R.layout.deviationsetter, null, false),
@@ -676,24 +667,24 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
                     true
             )
             deviationPopUp.showAtLocation(editText.rootView, Gravity.TOP, 0, 0)
-            var slider = deviationPopUp.contentView.findViewById<Slider>(R.id.slider)
+            val slider = deviationPopUp.contentView.findViewById<Slider>(R.id.slider)
 
-            if(easyThreshold < hardThreshold){
+            if(easyThreshold > hardThreshold){
                 val temp = easyThreshold
                 easyThreshold = hardThreshold
                 hardThreshold = temp
             }
-
             deviationPopUp.contentView.findViewById<Button>(R.id.deviationOkButton)
                     .setOnClickListener {
                         val sharedPreference =
                                 activityContext.getSharedPreferences("THRESHOLD", Context.MODE_PRIVATE)
-                        var editor = sharedPreference.edit()
+                        val editor = sharedPreference.edit()
                         editor.putFloat("threshold", (threshold + slider.value).toFloat())
                         editor.putFloat("baseThreshold", threshold.toFloat())
                         editor.putFloat("easyThreshold", easyThreshold.toFloat())
                         editor.putFloat("hardThreshold", hardThreshold.toFloat())
                         editor.apply()
+                        //activityContext.setTheme(R.style.UsingKeystrokeAuthentication)
                         deviationPopUp.dismiss()
                     }
 
@@ -701,11 +692,11 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             deviationPopUp.contentView.findViewById<TextView>(R.id.actualValue).text =
                     String.format("%.5f", threshold)
             deviationPopUp.contentView.findViewById<TextView>(R.id.lowerBoundary).text =
-                    String.format("%.5f", hardThreshold)
+                    String.format("%.5f", easyThreshold)
             deviationPopUp.contentView.findViewById<TextView>(R.id.upperBoundary).text =
-                    String.format("%.5f", easyThreshold.toFloat())
+                    String.format("%.5f", hardThreshold.toFloat())
 
-            var graph2 = deviationPopUp.contentView.findViewById<GraphView>(R.id.graphView)
+            val graph2 = deviationPopUp.contentView.findViewById<GraphView>(R.id.graphView)
 
             var series3: LineGraphSeries<DataPoint> = LineGraphSeries()
             var series5: LineGraphSeries<DataPoint> = LineGraphSeries()
@@ -726,8 +717,6 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
 
             series3 = LineGraphSeries()
             series5 = LineGraphSeries()
-            //series3.appendData(DataPoint(0.0, threshold), false, 100)
-            //series3.appendData(DataPoint(1.0, threshold), false, 100)
             for(i in 0 until thresholdsAndRates[0].size){
                 series3.appendData(DataPoint(thresholdsAndRates[0][i], thresholdsAndRates[1][i]), false, 100)
                 series5.appendData(DataPoint(thresholdsAndRates[0][i], thresholdsAndRates[2][i]), false, 100)
@@ -744,8 +733,8 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             graph2.addSeries(series4)
 
 
-            slider.valueFrom = hardThreshold.toFloat()
-            slider.valueTo = easyThreshold.toFloat()+ 0.00001.toFloat()
+            slider.valueFrom =  easyThreshold.toFloat()
+            slider.valueTo = hardThreshold.toFloat()+0.00001.toFloat()
             slider.value = threshold.toFloat()
             slider.addOnChangeListener(Slider.OnChangeListener { slider, value, fromUser ->
                 deviationPopUp.contentView.findViewById<TextView>(R.id.actualValue).text =
@@ -767,14 +756,17 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
     }
 
     fun getThresholds() {
-        var thresholdList = authenticationBroadcastReceiver.getThresholds()
+        val thresholdList = authenticationBroadcastReceiver.getThresholds()
         threshold = thresholdList[0]
         easyThreshold = thresholdList[1]
         hardThreshold = thresholdList[2]
+        Log.v("KAPOTT",threshold.toString())
+        Log.v("KAPOTT",easyThreshold.toString())
+        Log.v("KAPOTT",hardThreshold.toString())
     }
 
     fun Help(){
-        var helpPopUp = PopupWindow(
+        val helpPopUp = PopupWindow(
                 layoutInflater.inflate(R.layout.help, null, false),
                 Resources.getSystem().displayMetrics.widthPixels,
                 editText.rootView.height,
@@ -782,7 +774,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
         )
         helpPopUp.showAtLocation(editText.rootView, Gravity.TOP, 0, 0)
 
-        var closeButton:Button = helpPopUp.contentView.findViewById(R.id.closeHelpButton)
+        val closeButton:Button = helpPopUp.contentView.findViewById(R.id.closeHelpButton)
 
         closeButton.setOnClickListener{
             helpPopUp.dismiss()
@@ -807,12 +799,6 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
 
 
 }
-
-
-
-
-
-
 
 
 
