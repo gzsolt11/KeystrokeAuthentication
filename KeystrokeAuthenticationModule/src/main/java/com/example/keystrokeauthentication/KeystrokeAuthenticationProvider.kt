@@ -171,6 +171,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             passHashed = sharedPreferences.getString("passHashed",null)!!
             if(logHash != passHashed){
                 editText.setText("")
+                Log.v("Hash","nem talal")
                 return false
             }
             val authenticationResult = authenticationBroadcastReceiver.authenticate(
@@ -183,6 +184,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             return authenticationResult
         }
         editText.setText("")
+        Log.v("Hash","mas hiba")
         return false
     }
 
@@ -666,7 +668,7 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             deviationPopUp.showAtLocation(editText.rootView, Gravity.TOP, 0, 0)
             val slider = deviationPopUp.contentView.findViewById<Slider>(R.id.slider)
 
-            if(easyThreshold < hardThreshold){
+            if(easyThreshold > hardThreshold){
                 val temp = easyThreshold
                 easyThreshold = hardThreshold
                 hardThreshold = temp
