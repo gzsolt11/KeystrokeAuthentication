@@ -165,14 +165,14 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
 
     }
 
-    fun authenticate(): Boolean{
+    fun authenticate(): Int{
         if(isServiceRunning) {
             val logHash = hashString("SHA-256",logInPassword)
             passHashed = sharedPreferences.getString("passHashed",null)!!
             if(logHash != passHashed){
                 editText.setText("")
                 logInPassword = ""
-                return false
+                return -1
             }
             logInPassword = ""
             val authenticationResult = authenticationBroadcastReceiver.authenticate(
@@ -182,11 +182,15 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
             editText.setText("")
             authenticatePressedTimestamps = ArrayList()
             authenticateReleasedTimestamps = ArrayList()
-            return authenticationResult
+            if(authenticationResult){
+                return 1
+            } else{
+                return 0
+            }
         }
         editText.setText("")
         logInPassword = ""
-        return false
+        return 0
     }
 
 
