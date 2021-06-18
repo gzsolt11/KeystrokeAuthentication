@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#60000000">
+
+    <ImageView
+        android:id="@+id/alertBackground"
+        android:layout_width="350dp"
+        android:layout_height="150dp"
+        android:background="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/alertText"
+        android:layout_width="330dp"
+        android:layout_height="150dp"
+        android:background="@color/white"
+        android:text="Some of the patterns differ from the others!\nDo you want to rewrite them to increase the security of the system?"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="15dp"
+        app:layout_constraintEnd_toEndOf="@+id/alertBackground"
+        app:layout_constraintStart_toStartOf="@+id/alertBackground"
+        app:layout_constraintTop_toTopOf="@+id/alertBackground" />
+
+    <Button
+        android:id="@+id/noButton"
+        android:layout_width="175dp"
+        android:layout_height="50dp"
+        android:background="@color/teal_700"
+        android:text="No"
+        app:layout_constraintBottom_toBottomOf="@+id/alertText"
+        app:layout_constraintStart_toStartOf="@+id/alertBackground" />
+
+    <Button
+        android:id="@+id/yesButton"
+        android:layout_width="175dp"
+        android:layout_height="50dp"
+        android:background="@color/teal_700"
+        android:text="Yes"
+        app:layout_constraintBottom_toBottomOf="@+id/alertText"
+        app:layout_constraintEnd_toEndOf="@+id/alertBackground" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

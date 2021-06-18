@@ -498,25 +498,30 @@ class KeystrokeAuthenticationProvider(var activityContext: Context, var editText
                 if (trainCounterLeft == 0) {
                     Log.v("MERET", incorrectReleasedTimestamps.size.toString())
                     if(incorrectReleasedTimestamps.size > 0){
-                        val alertDialog = AlertDialog.Builder(activityContext)
-                                .setTitle("Some pattern differ from the others!")
-                                .setMessage("Would you like to rewrite those patterns to increase security?")
-                                .setCancelable(false)
-                                .setPositiveButton("Yes") { dialog, which ->
-                                    retry = true
-                                    trainCounterLeft = incorrectReleasedTimestamps.size/6
-                                    trainPinTitle.text = "Write your pincode " + trainCounterLeft + " times"
-                                }
-                                .setNegativeButton("No") { dialog, which ->
-                                    pressedTimestamps.addAll(incorrectPressedTimestamps)
-                                    releasedTimeStamps.addAll(incorrectReleasedTimestamps)
-                                    trainPopUp.dismiss()
-                                    trainApplication(pressedTimestamps, releasedTimeStamps)
-                                }
-                                .create()
+                        layoutInflater = activityContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+                        val alertPopUp = PopupWindow(
+                                layoutInflater.inflate(R.layout.alertdialog, null, false),
+                                Resources.getSystem().displayMetrics.widthPixels,
+                                editText.rootView.height,
+                                true
+                        )
 
-                        alertDialog.window!!.setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT)
-                        alertDialog.show()
+                        val noButton = alertPopUp.contentView.findViewById<Button>(R.id.noButton)
+                        val yesButton = alertPopUp.contentView.findViewById<Button>(R.id.yesButton)
+                        noButton.setOnClickListener{
+                            pressedTimestamps.addAll(incorrectPressedTimestamps)
+                            releasedTimeStamps.addAll(incorrectReleasedTimestamps)
+                            alertPopUp.dismiss()
+                            trainPopUp.dismiss()
+                            trainApplication(pressedTimestamps, releasedTimeStamps)
+                        }
+                        yesButton.setOnClickListener{
+                            retry = true
+                            trainCounterLeft = incorrectReleasedTimestamps.size/6
+                            trainPinTitle.text = "Write your pincode " + trainCounterLeft + " times"
+                            alertPopUp.dismiss()
+                        }
+                        alertPopUp.showAtLocation(editText.rootView, Gravity.TOP, 0, 0)
                     }else {
                         var editor = sharedPreferences.edit()
                         editor.putString("passHashed",passHashed)
